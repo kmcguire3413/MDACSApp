@@ -92,8 +92,8 @@ class MDACSItemsView extends React.Component {
         let buttonsForItems = [];
 
         for (let x = 0; x < items.length; ++x) {
-            const i = state.currentlyViewingItems[x];
-            const handler = buildHandler(i, x);
+            const i = items[x];
+            const handler = this.buildHandler(i, x);
             const timeDateString = i.jsDate.toLocaleDateString() + ' ' + i.jsDate.toLocaleTimeString();
 
             buttonsForItems.push(

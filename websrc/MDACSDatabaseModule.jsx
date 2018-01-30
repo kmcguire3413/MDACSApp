@@ -510,7 +510,7 @@ const MDACSDatabaseModuleViews = {
                             </td>
                             <td>
                                 <div>
-                                    <form onSubmit={(e) => onSearchClick(state.searchValue)}>
+                                    <form onSubmit={(e) => { e.preventDefault(); onSearchClick(state.searchValue);}}>
                                         <div>
                                             <Button type="submit">Search</Button>
                                             <Button onClick={onClearSearch}>Clear Search</Button>
