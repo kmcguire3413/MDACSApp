@@ -167,7 +167,8 @@ namespace MDACS.App
             var handlers = new Dictionary<String, SimpleServer<ServerCore>.SimpleHTTPHandler>();
 
             handlers.Add("/", Handlers.Index);
-            handlers.Add("/utility?", Handlers.Utility);
+            handlers.Add("/utility", Handlers.Utility);
+            handlers.Add("/get-config", Handlers.GetConfig);
 
             var server_task = SimpleServer<ServerCore>.Create(
                 server_state,

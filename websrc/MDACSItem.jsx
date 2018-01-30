@@ -42,6 +42,7 @@ class MDACSDataItemNote extends React.Component {
 
         this.state = {
             value: props.value,
+            state: 'success',
         }
     }
 
@@ -50,26 +51,58 @@ class MDACSDataItemNote extends React.Component {
         const state = this.state;
         const setState = this.setState.bind(this);
 
-        const changeNote = (e) => {
-            e.preventDefault();
+        const changeCancel = () => {
+            setState({
+                value: props.value,
+                state: 'success',
+            });
+        };
 
-            let newNote = prompt("Note", state.value);
+        const changeNote = (doPrompt) => {
+            let newNote 
+            
+            if (doPrompt) {
+                newNote = prompt("Note", state.value);
 
-            if (newNote === null) {
-                return;
+                if (newNote === null) {
+                    return;
+                }
+            } else {
+                newNote = state.value;
             }
 
             setState({
                 value: newNote,
+                state: 'pending',
             });
 
-            props.updater.setNote(props.sid, newNote);
+            props.updater.setNote(props.sid, newNote, (success) => {
+                if (success) {
+                    setState({
+                        state: 'success',
+                    });
+                } else {
+                    setState({
+                        state: 'error',
+                    });
+                }
+            });
         };
 
-        return  <span>
-                    <Button bsSize="xsmall" bsStyle="link" onClick={changeNote}>Edit</Button>
-                    {state.value}
-                </span>;
+        switch (state.state) {
+            case 'success':
+                return  <span>
+                            <Button bsSize="xsmall" bsStyle="link" onClick={(e) => changeNote(true)}>Edit</Button>
+                            {state.value}
+                        </span>;
+            case 'pending':
+                return <Alert bsStyle="warning">Saving: {state.value}</Alert>;
+            case 'error':
+                return <Alert bsStyle="danger">
+                            <Button bsStyle="success" onClick={(e) => changeNote(false)}>Retry</Button>
+                            <Button bsStyle="warning" onClick={changeCancel}>Cancel</Button>
+                        </Alert>;
+        }
     }
 }
 
@@ -97,6 +130,7 @@ class MDACSDataItemState extends React.Component {
 
         this.state = {
             value: props.value,
+            state: 'success',
         };
     }
 
@@ -167,17 +201,48 @@ class MDACSDataItemState extends React.Component {
             }
         }
 
-        const onChange = (e) => {
-            let newValue = e.target.value;
-            props.updater.setState(props.sid, newValue);
+        const retryCancel = () => {
+            setState({
+                value: props.value,
+                state: 'success',
+            })
+        };
+
+        const onChange = (newValue) => {
             setState({
                 value: newValue,
+                state: 'pending',
+            });
+
+            props.updater.setState(props.sid, newValue, (success) => {
+                if (success) {
+                    setState({
+                        state: 'success',
+                    });
+                } else {
+                    setState({
+                        state: 'error',
+                    })
+                }
             });
         };
 
-        return <select value={curState} onChange={onChange}>
-            {options}
-            </select>;
+        const isDisabled = props.user.admin === true ? false : true;
+
+        // <select validationState={} disabled={isDisabled} value={curState} onChange={onChange}>
+        switch (state.state) {
+            case 'success':
+                return <select disabled={isDisabled} value={curState} onChange={(e) => onChange(e.target.value)}>
+                    {options}
+                    </select>;
+            case 'pending':
+                return <span>Saving</span>
+            case 'error':
+                return <span>
+                    <Button bsStyle="success" onClick={(e) => onChange(state.value)}>Retry Change</Button>
+                    <Button bsStyle="warning" onClick={retryCancel}>Cancel Change</Button>
+                    </span>;
+        }
     }
 }
 
@@ -188,6 +253,7 @@ class MDACSDataItemState extends React.Component {
 /// <prop name="item">The item object.</prop>
 /// <prop name="updater">The object with callable methods to schedule changes.</prop>
 /// <prop name="viewer">The object with callable methods to view items.</prop>
+/// <prop name="user">The user currently viewing this component.</prop>
 class MDACSDataItem extends React.Component {
     constructor(props) {
         super(props);
@@ -215,15 +281,35 @@ class MDACSDataItem extends React.Component {
         const childrenCount = item.children ? item.children.length : 0;
         const dataType = item.datatype;
 
+        const user = props.user;
+
+        const failed = props.failed;
+
         return <tr>
                 <td>{props.index}</td>
-                <td><MDACSDataItemState value={item.state} sid={item.security_id} updater={updater}/></td>
-                <td><MDACSDataItemDate item={item} sid={item.security_id} updater={updater}/></td>
-                <td><MDACSDataItemTime item={item} sid={item.security_id} updater={updater}/></td>
-                <td><MDACSDataItemUser value={item.userstr} sid={item.security_id} updater={updater}/></td>
-                <td><MDACSDataItemDevice value={item.devicestr} sid={item.security_id} updater={updater}/></td>
+                <td><MDACSDataItemState 
+                        hasFailed={failed.state === true ? true : false} 
+                        user={user} 
+                        value={item.state} 
+                        sid={item.security_id} 
+                        updater={updater}/></td>
+                <td><MDACSDataItemDate 
+                        hasFailed={false}
+                        user={user} item={item} sid={item.security_id} updater={updater}/></td>
+                <td><MDACSDataItemTime 
+                        hasFailed={false} 
+                        user={user} item={item} sid={item.security_id} updater={updater}/></td>
+                <td><MDACSDataItemUser 
+                        hasFailed={false}
+                        user={user} value={item.userstr} sid={item.security_id} updater={updater}/></td>
+                <td><MDACSDataItemDevice 
+                        hasFailed={false}
+                        user={user} value={item.devicestr} sid={item.security_id} updater={updater}/></td>
                 <td><Button bsSize="xsmall" bsStyle="link" onClick={onViewClick}>View [{dataType}:{childrenCount + 1}]</Button></td>
-                <td style={{ width: '100%' }}><MDACSDataItemNote value={item.note} sid={item.security_id} updater={updater}/></td>
+                <td style={{ width: '100%' }}>
+                    <MDACSDataItemNote 
+                        hasFailed={failed.note === true ? true : false} 
+                        user={user} value={item.note} sid={item.security_id} updater={updater}/></td>
             </tr>;
     }
 }

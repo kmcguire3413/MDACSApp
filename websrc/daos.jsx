@@ -57,6 +57,19 @@ class DatabaseNetworkDAO {
         );
     }
 
+    spaceInfo(success, failure) {
+        this.dao.authenticatedTransaction(
+            '/spaceinfo',
+            {},
+            (resp) => {
+                success(JSON.parse(resp.text));
+            },
+            (res) => {
+                failure(res);
+            }
+        );
+    }
+
     data_noparse(success, failure) {
         this.dao.authenticatedTransaction(
             '/data',

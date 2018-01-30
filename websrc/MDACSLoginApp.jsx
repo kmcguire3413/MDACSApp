@@ -60,6 +60,7 @@ MDACSAuthLoginSwitcher.Views = {
       return <div>
                 {top}
                 <MDACSDatabaseServiceDirectory.ReactComponent
+                  user={state.user}
                   daoDatabase={state.daoAuth.getDatabaseDAO(props.dbUrl)}
                   daoAuth={state.daoAuth}
                   authUrl={props.authUrl}

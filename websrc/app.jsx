@@ -1,83 +1,3 @@
-let MDACSCoreApp = {};
-
-/*
-    Whats the drawbacks and benefits to distributing out the web application???
-
-    cons:
-        less capacity and scalability of the microservices
-        more complexity
-        more load time because of more requests across more varying servers
-        more difficulty using a CDN for resources or load balancing
-    pros:
-        interesting architecture
-        web application takes on a microservice architecture of its own
-            ??? whats the benefits to that ???
-                likely none... too tight of coupling between components??
-
-*/
-
-MDACSCoreApp.loadScript = (src, cb) => {
-    let scriptElement = document.createElement('script');
-
-    scriptElement.onload = () => cb(true);
-    scriptElement.onerror = () => cb(false);
-    scriptElement.src = src;
-
-    // document.currentScript.parentNode.insertBefore(scriptElement, document.currentScript);
-};
-
-/// <summary>
-/// This component handles bootstrapping the rest of the system. It will
-/// remotely load any code from other services, if needed, and then load
-/// that code here and load those modules into the react component hiarchy.
-/// </summary>
-MDACSCoreApp.ReactComponent = class extends React.Component {
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            status: 'Loading remote application code packages for login component...',
-            scriptsToLoadIndex: 0,
-        };
-    }
-
-    loadChain() {
-        const props = this.props;
-        const state = this.state;
-        const setState = this.setState.bind(this);
-
-        if (state.scriptsToLoadIndex >= props.scriptsToLoad.length) {
-            return;
-        }
-
-        // Continue loading the needed scripts.
-        let src = props.scriptsToLoad[state.scriptsToLoadIndex];
-
-        MDACSCoreApp.loadScript(src, (success) => {
-            this.loadChain();
-        });
-
-        setState({
-            status: 'Loading script ' + src + '...',
-        });
-    }
-
-    componentDidMount() {
-    }
-
-    render() {
-        if (state.status !== null) {
-            // We will display the login and once login is successful switch to displaying the avaliable stack.
-            // As remote packages are loaded they will become inserted into the stack.
-            return <Alert>{state.status}</Alert>;
-        }
-
-        // At this point, all scripts have been loaded that were needed.
-        return <Alert>scripts loaded</Alert>;
-    }
-}
-
-
 /// Bootstrap the application.
 request
     .get('./get-config')
@@ -90,22 +10,12 @@ request
         } else {
             const cfg = JSON.parse(res.text);
 
-            const scripts = [
-                cfg.authUrl + '/package.js',
-            ];
-
-            const components = [
-                'MDACSAuthModule.ReactComponent',
-                'MDACSDatabaseModule.ReactComponent',
-            ];
-
             ReactDOM.render(
-                <MDACSCoreApp.ReactComponent 
+                <MDACSAuthLoginSwitcher.ReactComponent
                     authUrl={cfg.authUrl}
                     dbUrl={cfg.dbUrl}
-                    scripts={scripts}
-                    components={components}
-                    />
+                    />,
+                    document.getElementById('root')
             );            
         }
     });

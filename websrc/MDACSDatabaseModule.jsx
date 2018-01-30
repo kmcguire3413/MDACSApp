@@ -66,12 +66,75 @@ function generate_sample_data(count) {
     return JSON.stringify(tmp);
 }
 
+/// <prop name="user">The user viewing this component.</prop>
+/// <prop name="dao">The data (database in this case) access object, with methods.</prop>
 class MDACSDataViewSummary extends React.Component {
     constructor(props) {
         super(props);
+
+        this.state = {
+            state: 'loading',
+        };
+    }
+
+    componentDidMount() {
+        this.refresh();
+    }
+
+    refresh() {
+        this.props.dao.spaceInfo(
+            (info) => {
+                this.setState({
+                    state: 'loaded',
+                    used_bytes: info.used_bytes,
+                    max_bytes: info.max_bytes,
+                });
+            },
+            () => {
+                this.setState({
+                    state: 'error',
+                });
+            }
+        );        
     }
 
     render() {
+        const state = this.state;
+        const refresh = this.refresh;
+        const props = this.props;
+
+        switch (state.state) {
+            case 'loading':
+                return <Panel>Loading summary information...</Panel>;
+            case 'loaded':
+            {
+                const usedPercentage = Math.round(state.used_bytes / state.max_bytes * 100.0);
+                const privType = props.user.admin ? 'administrator' : 'normal user';
+
+                let filterNote = null;
+
+                if (props.user.userfilter !== null) {
+                    filterNote = 'The data is filtered using the expression ' + props.user.userfilter + '.';
+                } else {
+                    filterNote = 'The data is not filtered using an expression.';
+                }
+
+                return <Panel>
+                        <Alert>
+                            <div>
+                                Currently, {usedPercentage}% of total space has been utilized.
+                            </div>
+                            <div>
+                                You are logged in with the username {props.user.user} which has {privType} privileges. {filterNote}
+                            </div>
+                        </Alert>
+                    </Panel>;
+            }
+            case 'error':
+                return <Panel>
+                        <Button bsStyle="success" onClick={refresh}>Try Loading Summary Again</Button>
+                    </Panel>;
+        }
     }
 }
 
@@ -108,11 +171,13 @@ const MDACSDatabaseModuleStateGenerator = (props, setState) => {
         builtInitialSubset: false,
         workerStatus: 'Loading...',
         worker: new Worker('utility?MDACSDataWorker.js'),
+        opFailedItems: {},
         searchValue: '',
         toggleDeletedbuttonText: 'Show Deleted',
         showDeleted: false,
         currentlyViewingItems: null,
         itemViewStuff: null,
+        usersInSubset: {},
     };
 
     // Hook up mutator to the worker message handler.
@@ -156,6 +221,7 @@ const MDACSDatabaseModuleMutators = {
                     beginIndex: 0,
                     endIndex: state.visibleCount,
                     dataCount: msg.count,
+                    usersInSubset: msg.usersFound,
                 });
 
                 state.worker.postMessage({
@@ -220,12 +286,10 @@ const MDACSDatabaseModuleMutators = {
             searchValue: e.target.value,
         });
     },
-    onSearchClick: (props, state, setState, e) => {
-        e.preventDefault();
-
+    onSearchClick: (props, state, setState, searchValue) => {
         state.worker.postMessage({
             topic: 'ProduceSubSet',
-            criteria: state.searchValue.split(' '),
+            criteria: searchValue.split(' '),
             showDeleted: state.showDeleted,
         });
     },
@@ -294,7 +358,7 @@ const MDACSDatabaseModuleMutators = {
             });
         }
     },
-    setItemState: (props, state, setState, sid, newState) => {
+    setItemState: (props, state, setState, sid, newState, cb) => {
         setState((prev, props) => {
             return { pendingOperationCount: prev.pendingOperationCount + 1 };
         });
@@ -312,15 +376,22 @@ const MDACSDatabaseModuleMutators = {
                 setState((prev, props) => {
                     return { pendingOperationCount: prev.pendingOperationCount - 1 };
                 });
+
+                cb(true);
             },
             () => {
                 setState((prev, props) => {
-                    return { pendingOperationCount: prev.pendingOperationCount - 1 };
+                    return { 
+                        pendingOperationCount: prev.pendingOperationCount - 1 
+                    };
                 });
+                
+
+                cb(false);
             }
         );
     },
-    setItemNote: (props, state, setState, sid, newNote) => {
+    setItemNote: (props, state, setState, sid, newNote, cb) => {
         setState((prev, props) => {
             return { pendingOperationCount: prev.pendingOperationCount + 1 };
         });
@@ -338,11 +409,15 @@ const MDACSDatabaseModuleMutators = {
                 setState((prev, props) => {
                     return { pendingOperationCount: prev.pendingOperationCount - 1 };
                 });
+
+                cb(true);
             },
             () => {
                 setState((prev, props) => {
                     return { pendingOperationCount: prev.pendingOperationCount - 1 };
                 });
+
+                cb(false);
             }
         );
     },
@@ -368,7 +443,7 @@ const MDACSDatabaseModuleViews = {
         const prevPage = () => mutators.prevPage(props, state, setState);
         const nextPage = () => mutators.nextPage(props, state, setState);
         const onSearchChange = (e) => mutators.onSearchChange(props, state, setState, e);
-        const onSearchClick = (e) => mutators.onSearchClick(props, state, setState, e);
+        const onSearchClick = (searchValue) => mutators.onSearchClick(props, state, setState, searchValue);
         const reloadData = (e) => mutators.onReloadData(props, state, setState, e);
         const toggleDeleted = (e) => mutators.onToggleDeleted(props, state, setState, e);
         const onClearSearch = (e) => {
@@ -395,6 +470,26 @@ const MDACSDatabaseModuleViews = {
 
         ///////////////////////////////////////////////
 
+        let usersInSubsetButtons = [];
+
+        let buildUserSearchClickHandler = (userName) => {
+            return (e) => {
+                setState({
+                    searchValue: userName,
+                });
+
+                onSearchClick(userName);
+            }
+        }  
+        
+        for (let userName in state.usersInSubset) {
+            let handler = buildUserSearchClickHandler(userName);
+
+            usersInSubsetButtons.push(
+                <Button onClick={handler}>Filter By {userName}</Button>
+            );
+        }        
+
         let bar = <Table>
                     <thead>
                         <tr>
@@ -415,16 +510,21 @@ const MDACSDatabaseModuleViews = {
                             </td>
                             <td>
                                 <div>
-                                    <form onSubmit={onSearchClick}>                                        
-                                        <Button type="submit">Search</Button>
-                                        <Button onClick={onClearSearch}>Clear Search</Button>
-                                        <FormControl
-                                            id="searchText"
-                                            type="text"
-                                            value={state.searchValue}
-                                            placeholder="Type search words here."
-                                            onChange={onSearchChange}
-                                        />                                            
+                                    <form onSubmit={(e) => onSearchClick(state.searchValue)}>
+                                        <div>
+                                            <Button type="submit">Search</Button>
+                                            <Button onClick={onClearSearch}>Clear Search</Button>
+                                            <FormControl
+                                                id="searchText"
+                                                type="text"
+                                                value={state.searchValue}
+                                                placeholder="Type search words here."
+                                                onChange={onSearchChange}
+                                            />
+                                        </div>
+                                        <div>
+                                            {usersInSubsetButtons}                                            
+                                        </div>
                                     </form>
                                 </div>
                                 <hr/>
@@ -472,9 +572,12 @@ const MDACSDatabaseModuleViews = {
                         <div>
                             {bar}
                         </div>
+                        <MDACSDataViewSummary user={props.user} dao={props.dao}/>
                         <h3>{state.workerStatus}</h3>
                         <h3>{errorView}</h3>
-                            <MDACSDataView 
+                            <MDACSDataView
+                                failed={state.opFailedItems}
+                                user={props.user}
                                 viewer={viewerInterface}
                                 updater={updaterInterface} 
                                 data={state.data} 
@@ -508,6 +611,7 @@ const MDACSDatabaseModuleViews = {
 };
 
 /// <prop name="dao">DAO for the database service.</prop>
+/// <prop name="user">The user viewing this component.</prop>
 class MDACSDatabaseModule extends React.Component {
     constructor(props) {
         super(props);
@@ -540,22 +644,24 @@ class MDACSDatabaseModule extends React.Component {
         const state = this.state;
 
         let updaterInterface = {
-            setNote: (sid, newNote) =>
+            setNote: (sid, newNote, cb) =>
                 MDACSDatabaseModuleMutators.setItemNote(
                     props, 
                     state,
                     boundSetState,
                     sid,
-                    newNote
+                    newNote,
+                    cb
                 )
             ,
-            setState: (sid, newState) =>
+            setState: (sid, newState, cb) =>
                 MDACSDatabaseModuleMutators.setItemState(
                     props,
                     state,
                     boundSetState,
                     sid,
-                    newState
+                    newState,
+                    cb
                 )
             ,
         }

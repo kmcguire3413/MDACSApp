@@ -67,8 +67,14 @@ def jsx_to_js(infile, outputs):
 
 def compile_jsx_and_concat(pdir, odir):
 	nodes = os.listdir(pdir)
+	
+	fd = open(os.path.join(pdir, 'MDACSDataWorker.js'), 'r')
+	xfd = open(os.path.join(odir, 'MDACSDataWorker.js'), 'w')
+	xfd.write(fd.read())
+	xfd.close()
+	fd.close()
 
-	open(os.path.join(pdir, 'app.js'), 'w').close()
+	open(os.path.join(odir, 'package.js'), 'w').close()
 
 	for node in nodes:
 		(node_base, ext) = os.path.splitext(node)

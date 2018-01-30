@@ -3,6 +3,7 @@
 /// <prop name="beginIndex">Only for visual purposes, if needed.</prop>
 /// <prop name="endIndex">Only for visual purposes, if needed.</prop>
 /// <prop name="data">Used to render the items. The entire data array is rendered.</prop>
+/// <prop name="user">The user viewing this component.</prop>
 class MDACSDataView extends React.Component {
     constructor(props) {
         super(props)
@@ -48,8 +49,16 @@ class MDACSDataView extends React.Component {
         for (let x = 0; x < data.length; ++x) {
             let item = data[x];
 
+            let failed_things = {};
+
+            if (props.failed[item.security_id] !== undefined) {
+                failed_things = props.failed[item.security_id];
+            }
+
             if (item !== undefined && item !== null) {
-                tmp.push(<MDACSDataItem 
+                tmp.push(<MDACSDataItem
+                            failed={failed_things}
+                            user={props.user}
                             viewer={props.viewer} 
                             updater={props.updater} 
                             index={x + beginIndex} 

@@ -11,13 +11,14 @@ MDACSDatabaseServiceDirectory.Mutators = {
 
 MDACSDatabaseServiceDirectory.Views = {
     Main: (props, state, setState, mutators) => {
-        return (<MDACSDatabaseModule dao={props.daoDatabase} />);
+        return (<MDACSDatabaseModule user={props.user} dao={props.daoDatabase} />);
     },
 };
 
 /// <prop name="dbUrl">The url for database service.</prop>
 /// <prop name="authUrl">The url for authentication service</prop>
 /// <prop name="daoAuth">DAO for authentication service</prop>
+/// <prop name="user">The user viewing this component.</prop>
 MDACSDatabaseServiceDirectory.ReactComponent = class extends React.Component {
     constructor(props) {
         super(props);
