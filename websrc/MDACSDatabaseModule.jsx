@@ -486,7 +486,7 @@ const MDACSDatabaseModuleViews = {
             let handler = buildUserSearchClickHandler(userName);
 
             usersInSubsetButtons.push(
-                <Button onClick={handler}>Filter By {userName}</Button>
+                <Button key={userName} onClick={handler}>Filter By {userName}</Button>
             );
         }        
 

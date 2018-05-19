@@ -150,9 +150,9 @@ class MDACSDataItemState extends React.Component {
         ];
         
         const descName = {
-            'auto-purge-30-days-before-delete-cloud-180-days': 'Auto-Purge 30/Cloud 180',
-            'auto-purge-90-days-before-delete-cloud-180-days': 'Auto-Purge 90/Cloud 180',
-            'auto-purge-180-days-before-delete-cloud-180-days': 'Auto-Purge 180/Cloud 180',
+            'auto-purge-30-days-before-delete-cloud-180-days': 'Auto-Purge 30/180',
+            'auto-purge-90-days-before-delete-cloud-180-days': 'Auto-Purge 90/180',
+            'auto-purge-180-days-before-delete-cloud-180-days': 'Auto-Purge 180/180',
             'deleted': 'Deleted',
             'keep-forever': 'Keep Forever',
             'unknown': 'Unselected/New Arrival',
@@ -161,7 +161,18 @@ class MDACSDataItemState extends React.Component {
             null: 'Unselected/New Arrival',
             undefined: 'Unselected/New Arrival',
             'restore': 'Restore',
+            'cloud-180': 'Cloud 180 Days',
+            'cloud-360': 'Cloud 360 Days',
+            'cloud-720': 'Cloud 720 Days',
+            'cloud-forever': 'Cloud Forever',
         };
+
+        const cloud = [
+            'cloud-180',
+            'cloud-forever',
+            'cloud-360',
+            'cloud-720',
+        ];
 
         const toStateFrom = {};
 
@@ -172,6 +183,7 @@ class MDACSDataItemState extends React.Component {
         forEachItemSet(toStateFrom, ['', null, undefined], a);
         forEachItemSet(toStateFrom, ['deleted'], ['restore']);
         forEachItemSet(toStateFrom, ['restore'], ['restore', 'deleted'])
+        forEachItemSet(toStateFrom, ['cloud-180'], cloud);
 
         const options = [];
 
@@ -285,6 +297,18 @@ class MDACSDataItem extends React.Component {
 
         const failed = props.failed;
 
+        let viewButton = <td><Button bsSize="xsmall" bsStyle="link" onClick={onViewClick}>View [{dataType}:{childrenCount + 1}]</Button></td>;
+
+        if (item.state.indexOf('cloud-') === 0) {
+            if (item.fqpath === null) {
+                viewButton = 'Only copy stored in the cloud.';
+            }
+        } else {
+            if (item.fqpath === null) {
+                viewButton = 'Deleted';
+            }
+        }
+
         return <tr>
                 <td>{props.index}</td>
                 <td><MDACSDataItemState 
@@ -305,7 +329,7 @@ class MDACSDataItem extends React.Component {
                 <td><MDACSDataItemDevice 
                         hasFailed={false}
                         user={user} value={item.devicestr} sid={item.security_id} updater={updater}/></td>
-                <td><Button bsSize="xsmall" bsStyle="link" onClick={onViewClick}>View [{dataType}:{childrenCount + 1}]</Button></td>
+                {viewButton}
                 <td style={{ width: '100%' }}>
                     <MDACSDataItemNote 
                         hasFailed={failed.note === true ? true : false} 

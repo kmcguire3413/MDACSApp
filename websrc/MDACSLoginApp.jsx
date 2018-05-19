@@ -59,13 +59,27 @@ MDACSAuthLoginSwitcher.Views = {
     } else {
       return <div>
                 {top}
-                <MDACSDatabaseServiceDirectory.ReactComponent
-                  user={state.user}
-                  daoDatabase={state.daoAuth.getDatabaseDAO(props.dbUrl)}
-                  daoAuth={state.daoAuth}
-                  authUrl={props.authUrl}
-                  dbUrl={props.dbUrl}
-                  />
+                <Tabs id="major-application-tabs" defaultActiveKey={1}>
+                    <Tab eventKey={1} key="database" title="Database">
+                        <MDACSDatabaseServiceDirectory.ReactComponent
+                        user={state.user}
+                        daoDatabase={state.daoAuth.getDatabaseDAO(props.dbUrl)}
+                        daoAuth={state.daoAuth}
+                        authUrl={props.authUrl}
+                        dbUrl={props.dbUrl}
+                        />
+                    </Tab>
+                    <Tab eventKey={2} key="console" title="Console">
+                        <MDACSConsole.ReactComponent
+                        user={state.user}
+                        daoDatabase={state.daoAuth.getDatabaseDAO(props.dbUrl)}
+                        daoAuth={state.daoAuth}
+                        daoStorageJuggler={null}
+                        authUrl={props.authUrl}
+                        dbUrl={props.dbUrl}                        
+                        />
+                    </Tab>
+                </Tabs>
             </div>;
     }
   },

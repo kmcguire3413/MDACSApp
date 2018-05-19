@@ -134,7 +134,7 @@ namespace MDACS.App
         {
             if (args.Length < 1)
             {
-                Console.WriteLine("Provide path or file that contains the JSON configuration. If file does not exit then default one will be created.");
+                Debug.WriteLine("Provide path or file that contains the JSON configuration. If file does not exit then default one will be created.");
                 return;
             }
 
@@ -152,7 +152,7 @@ namespace MDACS.App
                 defcfgfp.Write(JsonConvert.SerializeObject(defcfg, Formatting.Indented));
                 defcfgfp.Dispose();
 
-                Console.WriteLine("Default configuration created at location specified.");
+                Debug.WriteLine("Default configuration created at location specified.");
                 return;
             }
 
