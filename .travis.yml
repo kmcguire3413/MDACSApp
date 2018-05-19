@@ -12,7 +12,6 @@ before_script: true
 script:
  - npm install babel-cli
  - npm install babel-plugin-transform-react-jsx
- - python3 jsxcompile.py "./node_modules/babel-cli/bin/babel.js"
  - dotnet run
 before_cache: true
 before_deploy: true
