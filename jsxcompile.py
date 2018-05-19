@@ -7,7 +7,8 @@ import os.path
 import os
 import sys
 
-babelBinary = sys.argv[1]
+os.chdir(sys.argv[1])
+babelBinary = sys.argv[2]
 
 def jsx_to_js(infile, outputs):
 	print('+ compiling JSX into JS for %s' % infile)
