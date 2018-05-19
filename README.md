@@ -1,7 +1,7 @@
 # MDACS App
 
-[![Nightly Build Status](https://travis-ci.org/kmcguire3413/MDACSApp.svg?branch=nightly)](https://travis-ci.org/kmcguire3413/MDACSApp)
-[![Master Status](https://travis-ci.org/kmcguire3413/MDACSApp.svg?branch=master)](https://travis-ci.org/kmcguire3413/MDACSApp)
+Nightly = [![Nightly Build Status](https://travis-ci.org/kmcguire3413/MDACSApp.svg?branch=nightly)](https://travis-ci.org/kmcguire3413/MDACSApp)
+Master = [![Master Build Status](https://travis-ci.org/kmcguire3413/MDACSApp.svg?branch=master)](https://travis-ci.org/kmcguire3413/MDACSApp)
 
 This is the web-based user interface component of the system. It privides a graphical user interface. There
 are other components required for a fully functional system.
