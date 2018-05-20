@@ -377,6 +377,15 @@ const MDACSDatabaseModuleMutators = {
                     return { pendingOperationCount: prev.pendingOperationCount - 1 };
                 });
 
+                // https://github.com/kmcguire3413/MDACSApp/issues/4
+                for (let key in state.data) {
+                    let item = state.data[key];
+
+                    if (item.security_id === sid) {
+                        item.state = newState;
+                    }
+                }                
+
                 cb(true);
             },
             () => {
@@ -409,6 +418,15 @@ const MDACSDatabaseModuleMutators = {
                 setState((prev, props) => {
                     return { pendingOperationCount: prev.pendingOperationCount - 1 };
                 });
+
+                // https://github.com/kmcguire3413/MDACSApp/issues/4
+                for (let key in state.data) {
+                    let item = state.data[key];
+
+                    if (item.security_id === sid) {
+                        item.note = newNote;
+                    }
+                }
 
                 cb(true);
             },
