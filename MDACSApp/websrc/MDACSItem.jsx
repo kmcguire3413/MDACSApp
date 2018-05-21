@@ -297,7 +297,7 @@ class MDACSDataItem extends React.Component {
 
         const failed = props.failed;
 
-        let viewButton = <td><Button bsSize="xsmall" bsStyle="link" onClick={onViewClick}>View [{dataType}:{childrenCount + 1}]</Button></td>;
+        let viewButton = <Button bsSize="xsmall" bsStyle="link" onClick={onViewClick}>View [{dataType}:{childrenCount + 1}]</Button>;
 
         if (item.state.indexOf('cloud-') === 0) {
             if (item.fqpath === null) {
@@ -329,7 +329,7 @@ class MDACSDataItem extends React.Component {
                 <td><MDACSDataItemDevice 
                         hasFailed={false}
                         user={user} value={item.devicestr} sid={item.security_id} updater={updater}/></td>
-                {viewButton}
+                <td>{viewButton}</td>
                 <td style={{ width: '100%' }}>
                     <MDACSDataItemNote 
                         hasFailed={failed.note === true ? true : false} 
