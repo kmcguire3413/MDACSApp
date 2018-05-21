@@ -22,9 +22,9 @@ script:
  - echo "  IdentityFile ~/.ssh/id_github_mdacs" >> ~/.ssh/config
  - chmod 600 ~/.ssh/config
  - mkdir ~/tmp/
- - mkdir ~/tmp/webres
+ - mkdir ~/webres
  - cp ./bin/Debug/netcoreapp2.0/* ~/tmp/
- - cp ./webres/* ~/tmp/webres/
+ - cp ./webres/* ~/webres/
  - cd ~
  - git clone git@github.com:kmcguire3413/MDACSDeliverables.git
  - cd MDACSDeliverables
@@ -33,7 +33,7 @@ script:
  - cd MDACSApp
  - mkdir -p webres
  - cp ~/tmp/* ./
- - cp ~/tmp/webres/* ./webres/
+ - cp ~/webres/* ./webres/
  - git add *
  - git add ./webres/*
  - git commit -m "travis-ci automated deploy of nightly MDACSApp"
